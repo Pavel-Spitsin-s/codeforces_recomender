@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Recommendations for {{ handle }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">Top {{ recs|length }} Recommendations for <span class="text-primary">{{ handle }}</span></h2>
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Problem</th>
+        <th>Rating</th>
+        <th>Solved Count</th>
+        <th>Tags</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for _, row in recs.iterrows() %}
+      <tr>
+        <td>
+          <a href="https://codeforces.com/problemset/problem/{{ row.contestId }}/{{ row['index'] }}" target="_blank">
+            {{ row.problem_id }}: {{ row.name }}
+          </a>
+        </td>
+        <td>{{ row.rating or "-" }}</td>
+        <td>{{ row.solvedCount }}</td>
+        <td>{{ row.tags|join(', ') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="d-flex justify-content-between mt-3">
+  <a href="{{ url_for('home') }}" class="btn btn-secondary">Back</a>
+  {% if more %}
+    <a href="{{ url_for('recommend', handle=handle, offset=offset+page_size) }}" class="btn btn-primary">Recommend More</a>
+  {% endif %}
+</div>
+{% endblock %}
