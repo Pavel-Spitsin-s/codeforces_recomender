@@ -80,49 +80,49 @@ The pagination is implemented without altering `results.html`. The `recommend` v
 The recommendation logic is encapsulated in `RecommenderEngine` (see `recommender/engine.py`). It works as follows:
 
 1. **User Profile Construction** (`_user_profile`):
-   - Given a set of solved problem IDs `S`, extract their tag indicator vectors from `problem_df`.
+   - Given a set of solved problem IDs $S$, extract their tag indicator vectors from `problem_df`.
    - Sum these vectors to form a raw profile:  
-     \[
+     $$
        p_j = \sum_{i \in S} x_{ij},
-     \] 
-     where `x_{ij}` is 1 if problem *i* has tag *j*, else 0.
+     $$  
+     where $x_{ij}$ is 1 if problem *i* has tag *j*, else 0.
    - Normalize the profile vector:  
-     \[
-       \mathbf{u} = \frac{\mathbf{p}}{\|\mathbf{p}\|},
-     \]  
+     $$
+       \mathbf{u} = \frac{\mathbf{p}}{\lVert\mathbf{p}\rVert},
+     $$  
      ensuring unit length (or zero if no solved problems).
 
 2. **Candidate Selection**:
-   - Filter out problems the user has already solved, yielding a candidate set \(C\).
+   - Filter out problems the user has already solved, yielding a candidate set $C$.
 
 3. **Tag-based Similarity**:
-   - For each candidate problem *k*, retrieve its tag vector \(\mathbf{x}_k\).  
+   - For each candidate problem *k*, retrieve its tag vector $\mathbf{x}_k$.  
    - Compute cosine similarity:  
-     \[
-       \text{sim}_k = \frac{\mathbf{x}_k^T \mathbf{u}}{\|\mathbf{x}_k\|},
-     \]  
+     $$
+       \mathrm{sim}_k = \frac{\mathbf{x}_k^T \mathbf{u}}{\lVert\mathbf{x}_k\rVert},
+     $$  
      with a guard to treat zero-norm vectors appropriately.
 
 4. **Difficulty-based Score**:
-   - Fetch the user rating \(r_u\) via Codeforces API.
-   - Define a Gaussian kernel centered at \(r_u\) with standard deviation \(\sigma = 0.3\,r_u\):  
-     \[
+   - Fetch the user rating $r_u$ via the Codeforces API.
+   - Define a Gaussian kernel centered at $r_u$ with standard deviation $\sigma = 0.3\,r_u$:  
+     $$
        s_k = \exp\Bigl(-\frac{(r_k - r_u)^2}{2\sigma^2}\Bigr),
-     \]  
-     where \(r_k\) is the candidate’s rating (or \(r_u\) if missing).
+     $$  
+     where $r_k$ is the candidate’s rating (or $r_u$ if missing).
 
 5. **Popularity Normalization**:
    - Use a precomputed `pop_norm` feature representing normalized solved counts for each problem.
 
 6. **Combined Score**:
    - Aggregate the three components into a final score:  
-     \[
-       \text{score}_k = \alpha\,\text{sim}_k + \beta\,\text{pop\_norm}_k + \gamma\,s_k,
-     \]  
-     with default weights \(\alpha=0.6\), \(\beta=0.2\), \(\gamma=0.2\).
+     $$
+       \mathrm{score}_k = \alpha\,\mathrm{sim}_k + \beta\,\mathrm{pop\_norm}_k + \gamma\,s_k,
+     $$  
+     with default weights $\alpha=0.6$, $\beta=0.2$, $\gamma=0.2$.
 
 7. **Recommendation Output**:
-   - Select the top \(n\) candidates by `score_k` using a descending sort (`nlargest`).
+   - Select the top $n$ candidates by `score_k` using a descending sort (`nlargest`).
 
 Example usage in code:
 ```python
